@@ -234,6 +234,13 @@ class Snapshot:
             encoded_expected_value = value
             snapshot_path.write_text(encoded_value)
 
+        ## Update if it has no contents
+        if encoded_expected_value is None or encoded_expected_value == '':
+            encoded_expected_value = value
+            snapshot_path.write_text(encoded_value)
+
+
+
         if encoded_expected_value is not None:
             expected_value = encoded_expected_value
             try:
