@@ -202,6 +202,64 @@ class Snapshot:
                     "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
                         shorten_path(snapshot_path)))
 
+    def assert_match_json(
+        self,
+        value: Dict,
+        snapshot_name: Union[str, Path],
+    ):
+        """
+        Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
+
+        If pytest was run with the --snapshot-update flag, the snapshot will instead be updated to ``value``.
+        The test will fail if there were any changes to the snapshot.
+        """
+        __tracebackhide__ = operator.methodcaller("errisinstance", AssertionError)
+
+        def compare(a, b):
+            assert a == b
+
+        snapshot_path = self._snapshot_path(snapshot_name)
+        if snapshot_path.is_file():
+            encoded_expected_value = snapshot_path.read_text()
+        elif snapshot_path.exists():
+            raise AssertionError(
+                "snapshot exists but is not a file: {}".format(
+                    shorten_path(snapshot_path)
+                )
+            )
+        else:
+            ## Create it if it doesn't exist
+            snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+            encoded_value = value
+            encoded_expected_value = value
+            snapshot_path.write_text(encoded_value)
+
+        if encoded_expected_value is not None:
+            print(value)
+            expected_value = encoded_expected_value
+            try:
+                compare(value, expected_value)
+            except AssertionError as e:
+                snapshot_diff_msg = str(e)
+            else:
+                snapshot_diff_msg = None
+
+            if snapshot_diff_msg is not None:
+                snapshot_diff_msg = (
+                    "value does not match the expected value in snapshot {}\n"
+                    "  (run pytest with --snapshot-update to update snapshots)\n{}".format(
+                        shorten_path(snapshot_path), snapshot_diff_msg
+                    )
+                )
+                raise AssertionError(snapshot_diff_msg)
+        else:
+            raise AssertionError(
+                "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
+                    shorten_path(snapshot_path)
+                )
+            )
+
+
     def assert_match_dir(self, dir_dict: dict, snapshot_dir_name: Union[str, Path]):
         """
         Asserts that the values in dir_dict equal the current values in the given snapshot directory.
