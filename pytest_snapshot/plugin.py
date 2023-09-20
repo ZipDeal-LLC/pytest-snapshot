@@ -235,7 +235,6 @@ class Snapshot:
             snapshot_path.write_text(encoded_value)
 
         if encoded_expected_value is not None:
-            print(value)
             expected_value = encoded_expected_value
             try:
                 compare(value, expected_value)
