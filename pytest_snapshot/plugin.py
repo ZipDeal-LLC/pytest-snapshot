@@ -2,7 +2,7 @@ import operator
 import os
 import re
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict
 
 import pytest
 import _pytest.python
